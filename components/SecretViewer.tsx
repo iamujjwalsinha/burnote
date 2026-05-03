@@ -3,6 +3,12 @@
 import { useEffect, useState } from "react";
 import { importKeyFromFragment, decryptSecret } from "@/lib/crypto";
 
+const GREEN = "#034F46";
+const BG = "#FFFFEB";
+const CARD_BG = "#F4F4E0";
+const BORDER = "#D8D8C8";
+const TEXT = "#1A1A1A";
+
 type State =
   | { status: "loading" }
   | { status: "missing_key" }
@@ -17,42 +23,25 @@ export default function SecretViewer({ id }: { id: string }) {
   useEffect(() => {
     async function fetchAndDecrypt() {
       const fragment = window.location.hash.slice(1);
-
-      if (!fragment) {
-        setState({ status: "missing_key" });
-        return;
-      }
+      if (!fragment) { setState({ status: "missing_key" }); return; }
 
       try {
         const res = await fetch(`/api/secret/${id}`);
-
-        if (res.status === 404) {
-          setState({ status: "not_found" });
-          return;
-        }
-
-        if (!res.ok) {
-          throw new Error(`Server error: ${res.status}`);
-        }
+        if (res.status === 404) { setState({ status: "not_found" }); return; }
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
         const { ciphertext, iv, burnOnRead } = await res.json();
         const key = await importKeyFromFragment(fragment);
         const plaintext = await decryptSecret(ciphertext, iv, key);
-
         setState({ status: "success", plaintext, burned: Boolean(burnOnRead) });
       } catch (err: unknown) {
         if ((err as { status?: number })?.status === 404) {
           setState({ status: "not_found" });
         } else {
-          setState({
-            status: "error",
-            message:
-              err instanceof Error ? err.message : "Decryption failed",
-          });
+          setState({ status: "error", message: err instanceof Error ? err.message : "Decryption failed" });
         }
       }
     }
-
     fetchAndDecrypt();
   }, [id]);
 
@@ -62,28 +51,36 @@ export default function SecretViewer({ id }: { id: string }) {
       await navigator.clipboard.writeText(state.plaintext);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // silently fail
-    }
+    } catch { /* silent */ }
   }
+
+  const cardStyle = {
+    backgroundColor: CARD_BG,
+    border: `1px solid ${BORDER}`,
+    borderRadius: "16px",
+    padding: "28px",
+    textAlign: "center" as const,
+  };
 
   if (state.status === "loading") {
     return (
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-8 text-center">
-        <div className="text-2xl mb-3 animate-pulse">🔐</div>
-        <p className="text-neutral-400 text-sm">Decrypting secret...</p>
+      <div style={cardStyle}>
+        <div className="text-3xl mb-3 animate-pulse">🔐</div>
+        <p className="text-sm" style={{ color: TEXT, opacity: 0.55 }}>Decrypting secret…</p>
       </div>
     );
   }
 
   if (state.status === "missing_key") {
     return (
-      <div className="bg-[#1a1a1a] border border-red-900/40 rounded-xl p-8 text-center">
-        <div className="text-2xl mb-3">🔑</div>
-        <h2 className="text-white font-semibold mb-2">Missing decryption key</h2>
-        <p className="text-neutral-400 text-sm">
+      <div style={{ ...cardStyle, border: `1px solid #FCA5A5`, backgroundColor: "#FFF5F5" }}>
+        <div className="text-3xl mb-3">🔑</div>
+        <h2 className="font-semibold mb-2" style={{ fontFamily: "'Bricolage Grotesque', sans-serif", color: TEXT }}>
+          Missing decryption key
+        </h2>
+        <p className="text-sm" style={{ color: TEXT, opacity: 0.6 }}>
           The decryption key is missing from the URL. Make sure you copied the
-          full link including the <code className="text-amber-400">#</code> part.
+          full link including the <code style={{ color: GREEN }}>#</code> part.
         </p>
       </div>
     );
@@ -91,16 +88,15 @@ export default function SecretViewer({ id }: { id: string }) {
 
   if (state.status === "not_found") {
     return (
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-8 text-center">
-        <div className="text-2xl mb-3">💨</div>
-        <h2 className="text-white font-semibold mb-2">Secret not found</h2>
-        <p className="text-neutral-400 text-sm">
+      <div style={cardStyle}>
+        <div className="text-3xl mb-3">💨</div>
+        <h2 className="font-semibold mb-2" style={{ fontFamily: "'Bricolage Grotesque', sans-serif", color: TEXT }}>
+          Secret not found
+        </h2>
+        <p className="text-sm mb-4" style={{ color: TEXT, opacity: 0.55 }}>
           This secret may have expired or already been read.
         </p>
-        <a
-          href="/"
-          className="inline-block mt-4 text-amber-500 hover:text-amber-400 text-sm transition-colors"
-        >
+        <a href="/" style={{ color: GREEN, fontSize: "14px", fontWeight: 500, textDecoration: "none" }}>
           Create a new secret →
         </a>
       </div>
@@ -109,10 +105,12 @@ export default function SecretViewer({ id }: { id: string }) {
 
   if (state.status === "error") {
     return (
-      <div className="bg-[#1a1a1a] border border-red-900/40 rounded-xl p-8 text-center">
-        <div className="text-2xl mb-3">⚠️</div>
-        <h2 className="text-white font-semibold mb-2">Decryption failed</h2>
-        <p className="text-neutral-400 text-sm">{state.message}</p>
+      <div style={{ ...cardStyle, border: `1px solid #FCA5A5`, backgroundColor: "#FFF5F5" }}>
+        <div className="text-3xl mb-3">⚠️</div>
+        <h2 className="font-semibold mb-2" style={{ fontFamily: "'Bricolage Grotesque', sans-serif", color: TEXT }}>
+          Decryption failed
+        </h2>
+        <p className="text-sm" style={{ color: TEXT, opacity: 0.6 }}>{state.message}</p>
       </div>
     );
   }
@@ -120,37 +118,56 @@ export default function SecretViewer({ id }: { id: string }) {
   return (
     <div className="space-y-4 animate-fade-in">
       {state.burned && (
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-3 flex items-start gap-3">
-          <span className="text-lg">🔥</span>
-          <p className="text-amber-300 text-sm">
-            This secret has been permanently deleted after viewing. No one can
-            access it again.
+        <div style={{
+          backgroundColor: `${GREEN}10`, border: `1px solid ${GREEN}30`,
+          borderRadius: "10px", padding: "12px 16px",
+          display: "flex", alignItems: "flex-start", gap: "10px",
+        }}>
+          <span style={{ fontSize: "16px", flexShrink: 0 }}>🔥</span>
+          <p style={{ fontSize: "13px", color: GREEN, margin: 0, lineHeight: 1.5 }}>
+            This secret has been permanently deleted after viewing. No one can access it again.
           </p>
         </div>
       )}
 
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6">
+      <div style={{ backgroundColor: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: "16px", padding: "24px" }}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-medium text-neutral-400">
-            Decrypted secret
+          <h2 className="text-sm font-medium" style={{ color: TEXT, opacity: 0.5 }}>
+            Decrypted message
           </h2>
           <button
             onClick={copyPlaintext}
-            className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black text-xs font-semibold rounded-md transition-colors"
+            style={{
+              padding: "6px 14px", backgroundColor: GREEN, color: "#FFFFEB",
+              fontSize: "12px", fontWeight: 600, borderRadius: "8px",
+              border: "none", cursor: "pointer", transition: "opacity 0.15s",
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.opacity = "0.85")}
+            onMouseOut={(e) => (e.currentTarget.style.opacity = "1")}
           >
             {copied ? "Copied!" : "Copy"}
           </button>
         </div>
-        <pre className="font-mono text-sm text-neutral-100 whitespace-pre-wrap break-words leading-relaxed bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg p-4 max-h-96 overflow-y-auto">
+        <pre style={{
+          fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+          fontSize: "13px", color: TEXT, whiteSpace: "pre-wrap",
+          wordBreak: "break-words", lineHeight: "1.7",
+          backgroundColor: BG, border: `1px solid ${BORDER}`,
+          borderRadius: "10px", padding: "16px",
+          maxHeight: "380px", overflowY: "auto", margin: 0,
+        }}>
           {state.plaintext}
         </pre>
       </div>
 
       <a
         href="/"
-        className="block text-center text-neutral-500 hover:text-neutral-300 text-sm transition-colors"
+        className="block text-center text-sm"
+        style={{ color: TEXT, opacity: 0.45, textDecoration: "none", transition: "opacity 0.15s" }}
+        onMouseOver={(e) => (e.currentTarget.style.opacity = "0.75")}
+        onMouseOut={(e) => (e.currentTarget.style.opacity = "0.45")}
       >
-        Create your own secret →
+        Share your own secret with hedwig →
       </a>
     </div>
   );
