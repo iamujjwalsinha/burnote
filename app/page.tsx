@@ -9,8 +9,8 @@ export default function Home() {
             hedwig
           </h1>
           <p className="text-base leading-relaxed" style={{ color: "#1A1A1A", opacity: 0.6 }}>
-            Zero-knowledge secret sharing. Encrypted in your browser —<br />
-            the server never sees your plaintext.
+            Zero-knowledge secret sharing. Encrypted in your browser.<br />
+            The server never sees your plaintext.
           </p>
         </div>
         <SecretForm />
