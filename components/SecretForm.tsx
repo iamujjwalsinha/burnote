@@ -309,12 +309,12 @@ export default function SecretForm() {
       {step === "done" && (
         <div className="space-y-5 animate-fade-in">
           <div className="text-center">
-            <div className="text-3xl mb-3">✉️</div>
+            <div className="text-3xl mb-3">🦉</div>
             <h2 className="text-xl font-semibold mb-1" style={{ fontFamily: "'Bricolage Grotesque', sans-serif", color: TEXT }}>
-              Secret encrypted
+              Hedwig is on her way
             </h2>
             <p className="text-sm" style={{ color: TEXT, opacity: 0.55 }}>
-              Share this link. The key is in the <code style={{ color: GREEN }}>#fragment</code> — never sent to the server.
+              Your secret has been sealed. Share the link below — the decryption key flies only in the <code style={{ color: GREEN }}>#fragment</code>, never through our servers.
             </p>
           </div>
 
