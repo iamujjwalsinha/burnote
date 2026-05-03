@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { importKeyFromFragment, decryptSecret } from "@/lib/crypto";
 
 const GREEN = "#034F46";
@@ -19,8 +19,12 @@ type State =
 export default function SecretViewer({ id }: { id: string }) {
   const [state, setState] = useState<State>({ status: "loading" });
   const [copied, setCopied] = useState(false);
+  const hasFetched = useRef(false);
 
   useEffect(() => {
+    if (hasFetched.current) return;
+    hasFetched.current = true;
+
     async function fetchAndDecrypt() {
       const fragment = window.location.hash.slice(1);
       if (!fragment) { setState({ status: "missing_key" }); return; }
