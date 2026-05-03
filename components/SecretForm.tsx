@@ -4,10 +4,10 @@ import { useState } from "react";
 import { generateKey, encryptSecret, exportKeyToFragment } from "@/lib/crypto";
 
 const TTL_OPTIONS = [
+  { label: "15 minutes", value: 900 },
+  { label: "30 minutes", value: 1800 },
+  { label: "45 minutes", value: 2700 },
   { label: "1 hour", value: 3600 },
-  { label: "24 hours", value: 86400 },
-  { label: "7 days", value: 604800 },
-  { label: "30 days", value: 2592000 },
 ];
 
 const GREEN = "#034F46";
