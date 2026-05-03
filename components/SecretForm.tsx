@@ -10,6 +10,12 @@ const TTL_OPTIONS = [
   { label: "30 days", value: 2592000 },
 ];
 
+const GREEN = "#034F46";
+const BG = "#FFFFEB";
+const CARD_BG = "#F4F4E0";
+const BORDER = "#D8D8C8";
+const TEXT = "#1A1A1A";
+
 type Step = "write" | "preview" | "done";
 
 export default function SecretForm() {
@@ -39,7 +45,6 @@ export default function SecretForm() {
   async function handleEncrypt() {
     setLoading(true);
     setError("");
-
     try {
       const key = await generateKey();
       const { ciphertext, iv } = await encryptSecret(plaintext, key);
@@ -57,8 +62,7 @@ export default function SecretForm() {
       }
 
       const { id } = await res.json();
-      const link = `${window.location.origin}/s/${id}#${keyFragment}`;
-      setGeneratedLink(link);
+      setGeneratedLink(`${window.location.origin}/s/${id}#${keyFragment}`);
       setStep("done");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -87,147 +91,185 @@ export default function SecretForm() {
   }
 
   return (
-    <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6">
+    <div style={{ backgroundColor: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: "16px", padding: "28px" }}>
 
       {/* ── STEP 1: Write ── */}
       {step === "write" && (
         <form onSubmit={handlePreview} className="space-y-5">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-neutral-300">
+              <label className="text-sm font-medium" style={{ color: TEXT }}>
                 Your secret
               </label>
-              {plaintext.length > 0 && (
-                <span className="text-xs text-neutral-600">
+              {charCount > 0 && (
+                <span className="text-xs" style={{ color: TEXT, opacity: 0.4 }}>
                   {charCount} chars · {lineCount} {lineCount === 1 ? "line" : "lines"}
                 </span>
               )}
             </div>
             <textarea
               value={plaintext}
-              onChange={(e) => {
-                setPlaintext(e.target.value);
-                if (error) setError("");
-              }}
+              onChange={(e) => { setPlaintext(e.target.value); if (error) setError(""); }}
               rows={7}
               placeholder="Paste your secret here — passwords, tokens, private notes..."
-              className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-3 text-sm font-mono text-neutral-100 placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 resize-none transition-colors"
+              style={{
+                width: "100%",
+                backgroundColor: BG,
+                border: `1px solid ${BORDER}`,
+                borderRadius: "10px",
+                padding: "12px 14px",
+                fontSize: "14px",
+                fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                color: TEXT,
+                outline: "none",
+                resize: "none",
+                lineHeight: "1.6",
+              }}
+              onFocus={(e) => { e.target.style.borderColor = GREEN; e.target.style.boxShadow = `0 0 0 3px ${GREEN}18`; }}
+              onBlur={(e) => { e.target.style.borderColor = BORDER; e.target.style.boxShadow = "none"; }}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-2">
+              <label className="block text-sm font-medium mb-2" style={{ color: TEXT }}>
                 Expires in
               </label>
               <select
                 value={ttl}
                 onChange={(e) => setTtl(Number(e.target.value))}
-                className="w-full bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-sm text-neutral-100 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 transition-colors"
+                style={{
+                  width: "100%",
+                  backgroundColor: BG,
+                  border: `1px solid ${BORDER}`,
+                  borderRadius: "10px",
+                  padding: "10px 12px",
+                  fontSize: "14px",
+                  color: TEXT,
+                  outline: "none",
+                  cursor: "pointer",
+                }}
               >
                 {TTL_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-2">
+              <label className="block text-sm font-medium mb-2" style={{ color: TEXT }}>
                 Burn after reading
               </label>
               <button
                 type="button"
-                onClick={() => setBurnOnRead((prev) => !prev)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm transition-colors ${
-                  burnOnRead
-                    ? "bg-amber-500/10 border-amber-500/40 text-amber-400"
-                    : "bg-[#0f0f0f] border-[#2a2a2a] text-neutral-400"
-                }`}
+                onClick={() => setBurnOnRead((p) => !p)}
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "10px 12px",
+                  borderRadius: "10px",
+                  border: `1px solid ${burnOnRead ? GREEN : BORDER}`,
+                  backgroundColor: burnOnRead ? `${GREEN}12` : BG,
+                  fontSize: "14px",
+                  color: burnOnRead ? GREEN : TEXT,
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                  fontWeight: burnOnRead ? 500 : 400,
+                }}
               >
                 <span>{burnOnRead ? "Enabled" : "Disabled"}</span>
-                <span
-                  className={`w-8 h-4 rounded-full relative transition-colors ${
-                    burnOnRead ? "bg-amber-500" : "bg-[#3a3a3a]"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${
-                      burnOnRead ? "left-[18px]" : "left-0.5"
-                    }`}
-                  />
+                <span style={{
+                  width: "32px", height: "18px", borderRadius: "9px", position: "relative",
+                  backgroundColor: burnOnRead ? GREEN : "#CBD5D3",
+                  transition: "background-color 0.15s", flexShrink: 0,
+                }}>
+                  <span style={{
+                    position: "absolute", top: "3px",
+                    left: burnOnRead ? "17px" : "3px",
+                    width: "12px", height: "12px", borderRadius: "50%",
+                    backgroundColor: "white", transition: "left 0.15s",
+                  }} />
                 </span>
               </button>
             </div>
           </div>
 
           {error && (
-            <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-2">
+            <p style={{ color: "#B91C1C", fontSize: "13px", backgroundColor: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "8px", padding: "10px 14px" }}>
               {error}
             </p>
           )}
 
           <button
             type="submit"
-            className="w-full bg-amber-500 hover:bg-amber-400 text-black font-semibold py-3 rounded-lg text-sm transition-colors"
+            style={{
+              width: "100%", backgroundColor: GREEN, color: "#FFFFEB",
+              fontWeight: 600, padding: "13px", borderRadius: "10px",
+              fontSize: "14px", border: "none", cursor: "pointer",
+              boxShadow: "0 4px 14px rgba(3,79,70,0.25)",
+              transition: "opacity 0.15s",
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.opacity = "0.9")}
+            onMouseOut={(e) => (e.currentTarget.style.opacity = "1")}
           >
             Review & Confirm →
           </button>
 
-          <p className="text-neutral-600 text-xs text-center">
+          <p className="text-center text-xs" style={{ color: TEXT, opacity: 0.4 }}>
             Encryption happens in your browser. The server never sees your plaintext.
           </p>
         </form>
       )}
 
-      {/* ── STEP 2: Preview / Confirm ── */}
+      {/* ── STEP 2: Preview ── */}
       {step === "preview" && (
         <div className="space-y-5 animate-fade-in">
           <div>
-            <h2 className="text-base font-semibold text-white mb-1">
+            <h2 className="text-lg font-semibold mb-1" style={{ fontFamily: "'Bricolage Grotesque', sans-serif", color: TEXT }}>
               Review your secret
             </h2>
-            <p className="text-neutral-500 text-sm">
-              Make sure everything looks right before it gets encrypted.
+            <p className="text-sm" style={{ color: TEXT, opacity: 0.55 }}>
+              Confirm everything looks right before encrypting.
             </p>
           </div>
 
-          {/* Secret preview */}
-          <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-[#2a2a2a]">
-              <span className="text-xs text-neutral-500 font-medium uppercase tracking-wide">
+          <div style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, borderRadius: "10px", overflow: "hidden" }}>
+            <div className="flex items-center justify-between px-4 py-2" style={{ borderBottom: `1px solid ${BORDER}` }}>
+              <span className="text-xs font-medium uppercase tracking-wide" style={{ color: TEXT, opacity: 0.4 }}>
                 Secret preview
               </span>
-              <span className="text-xs text-neutral-600">
+              <span className="text-xs" style={{ color: TEXT, opacity: 0.35 }}>
                 {charCount} chars · {lineCount} {lineCount === 1 ? "line" : "lines"}
               </span>
             </div>
-            <pre className="px-4 py-3 text-sm font-mono text-neutral-300 whitespace-pre-wrap break-words max-h-48 overflow-y-auto leading-relaxed">
+            <pre style={{
+              padding: "14px 16px", fontSize: "13px",
+              fontFamily: "'JetBrains Mono', monospace", color: TEXT,
+              whiteSpace: "pre-wrap", wordBreak: "break-words",
+              maxHeight: "180px", overflowY: "auto", lineHeight: "1.6",
+              margin: 0,
+            }}>
               {plaintext}
             </pre>
           </div>
 
-          {/* Settings summary */}
-          <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-3 space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-neutral-500">Expires in</span>
-              <span className="text-neutral-300">{ttlLabel}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-neutral-500">Burn after reading</span>
-              <span className={burnOnRead ? "text-amber-400" : "text-neutral-400"}>
-                {burnOnRead ? "Yes — deleted on first view" : "No"}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-neutral-500">Encryption</span>
-              <span className="text-neutral-300">AES-GCM 256-bit (browser-only)</span>
-            </div>
+          <div style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, borderRadius: "10px", padding: "14px 16px" }} className="space-y-2">
+            {[
+              ["Expires in", ttlLabel],
+              ["Burn after reading", burnOnRead ? "Yes — deleted on first view" : "No"],
+              ["Encryption", "AES-GCM 256-bit (browser-only)"],
+            ].map(([label, value]) => (
+              <div key={label} className="flex justify-between text-sm">
+                <span style={{ color: TEXT, opacity: 0.5 }}>{label}</span>
+                <span style={{ color: label === "Burn after reading" && burnOnRead ? GREEN : TEXT, fontWeight: burnOnRead && label === "Burn after reading" ? 500 : 400 }}>{value}</span>
+              </div>
+            ))}
           </div>
 
           {error && (
-            <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-2">
+            <p style={{ color: "#B91C1C", fontSize: "13px", backgroundColor: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "8px", padding: "10px 14px" }}>
               {error}
             </p>
           )}
@@ -236,16 +278,28 @@ export default function SecretForm() {
             <button
               onClick={() => setStep("write")}
               disabled={loading}
-              className="flex-1 border border-[#2a2a2a] hover:border-[#3a3a3a] text-neutral-400 hover:text-neutral-200 py-3 rounded-lg text-sm transition-colors disabled:opacity-50"
+              style={{
+                flex: 1, border: `1px solid ${BORDER}`, backgroundColor: BG,
+                color: TEXT, padding: "12px", borderRadius: "10px",
+                fontSize: "14px", cursor: "pointer", transition: "border-color 0.15s",
+                opacity: loading ? 0.5 : 1,
+              }}
             >
               ← Edit
             </button>
             <button
               onClick={handleEncrypt}
               disabled={loading}
-              className="flex-[2] bg-amber-500 hover:bg-amber-400 disabled:bg-amber-500/50 text-black font-semibold py-3 rounded-lg text-sm transition-colors"
+              style={{
+                flex: 2, backgroundColor: loading ? `${GREEN}80` : GREEN,
+                color: "#FFFFEB", fontWeight: 600, padding: "12px",
+                borderRadius: "10px", fontSize: "14px", border: "none",
+                cursor: loading ? "not-allowed" : "pointer",
+                boxShadow: loading ? "none" : "0 4px 14px rgba(3,79,70,0.25)",
+                transition: "all 0.15s",
+              }}
             >
-              {loading ? "Encrypting..." : "Confirm & Encrypt"}
+              {loading ? "Encrypting…" : "Confirm & Encrypt"}
             </button>
           </div>
         </div>
@@ -255,50 +309,67 @@ export default function SecretForm() {
       {step === "done" && (
         <div className="space-y-5 animate-fade-in">
           <div className="text-center">
-            <div className="text-2xl mb-2">✅</div>
-            <h2 className="text-lg font-semibold text-white">Secret encrypted!</h2>
-            <p className="text-neutral-400 text-sm mt-1">
-              Share this link. The decryption key lives after the{" "}
-              <code className="text-amber-400">#</code> and never touches the server.
+            <div className="text-3xl mb-3">✉️</div>
+            <h2 className="text-xl font-semibold mb-1" style={{ fontFamily: "'Bricolage Grotesque', sans-serif", color: TEXT }}>
+              Secret encrypted
+            </h2>
+            <p className="text-sm" style={{ color: TEXT, opacity: 0.55 }}>
+              Share this link. The key is in the <code style={{ color: GREEN }}>#fragment</code> — never sent to the server.
             </p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-neutral-300 mb-2">
-              Your shareable link
-            </label>
+            <label className="block text-sm font-medium mb-2" style={{ color: TEXT }}>Shareable link</label>
             <div className="flex gap-2">
               <input
                 type="text"
                 readOnly
                 value={generatedLink}
-                className="flex-1 min-w-0 bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-xs font-mono text-neutral-300 focus:outline-none"
+                style={{
+                  flex: 1, minWidth: 0, backgroundColor: BG, border: `1px solid ${BORDER}`,
+                  borderRadius: "10px", padding: "10px 12px",
+                  fontSize: "12px", fontFamily: "'JetBrains Mono', monospace",
+                  color: TEXT, outline: "none",
+                }}
               />
               <button
                 onClick={copyLink}
-                className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-semibold text-sm rounded-lg transition-colors whitespace-nowrap"
+                style={{
+                  padding: "10px 18px", backgroundColor: GREEN, color: "#FFFFEB",
+                  fontWeight: 600, fontSize: "14px", borderRadius: "10px",
+                  border: "none", cursor: "pointer", whiteSpace: "nowrap",
+                  boxShadow: "0 4px 14px rgba(3,79,70,0.25)", transition: "opacity 0.15s",
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.opacity = "0.9")}
+                onMouseOut={(e) => (e.currentTarget.style.opacity = "1")}
               >
                 {copied ? "Copied!" : "Copy"}
               </button>
             </div>
           </div>
 
-          <div className="bg-[#0f0f0f] border border-[#2a2a2a] rounded-lg px-4 py-3 space-y-1.5 text-sm">
-            <div className="flex justify-between">
-              <span className="text-neutral-500">Expires</span>
-              <span className="text-neutral-300">{ttlLabel} from now</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-neutral-500">Burn after reading</span>
-              <span className={burnOnRead ? "text-amber-400" : "text-neutral-300"}>
-                {burnOnRead ? "Yes" : "No"}
-              </span>
-            </div>
+          <div style={{ backgroundColor: BG, border: `1px solid ${BORDER}`, borderRadius: "10px", padding: "14px 16px" }} className="space-y-2">
+            {[
+              ["Expires", `${ttlLabel} from now`],
+              ["Burn after reading", burnOnRead ? "Yes" : "No"],
+            ].map(([label, value]) => (
+              <div key={label} className="flex justify-between text-sm">
+                <span style={{ color: TEXT, opacity: 0.5 }}>{label}</span>
+                <span style={{ color: label === "Burn after reading" && burnOnRead ? GREEN : TEXT, fontWeight: burnOnRead && label === "Burn after reading" ? 500 : 400 }}>{value}</span>
+              </div>
+            ))}
           </div>
 
           <button
             onClick={reset}
-            className="w-full border border-[#2a2a2a] hover:border-[#3a3a3a] text-neutral-400 hover:text-neutral-200 py-2.5 rounded-lg text-sm transition-colors"
+            style={{
+              width: "100%", border: `1px solid ${BORDER}`, backgroundColor: "transparent",
+              color: TEXT, padding: "12px", borderRadius: "10px",
+              fontSize: "14px", cursor: "pointer", opacity: 0.7,
+              transition: "opacity 0.15s",
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.opacity = "1")}
+            onMouseOut={(e) => (e.currentTarget.style.opacity = "0.7")}
           >
             Create another secret
           </button>
